@@ -155,8 +155,7 @@ if __name__ == "__main__":
                 fastq_url = "ftp://" + f
                 fastq_name = f.split('/')[-1]
                 output_path = out + fastq_name
-                # success = download_reads(fastq_url, output_path)
-                success = True
+                success = download_reads(fastq_url, output_path)
                 fastq_names.append(fastq_name)
 
             if success:
