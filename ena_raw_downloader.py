@@ -87,7 +87,6 @@ def extract_single(file_list):
     single = []
     paired = []
     common = os.path.commonprefix(file_list)
-    print(common)
     for file in file_list:
         if file.split(".")[0] == common:
             single.append(file)
@@ -156,7 +155,8 @@ if __name__ == "__main__":
                 fastq_url = "ftp://" + f
                 fastq_name = f.split('/')[-1]
                 output_path = out + fastq_name
-                success = download_reads(fastq_url, output_path)
+                # success = download_reads(fastq_url, output_path)
+                success = True
                 fastq_names.append(fastq_name)
 
             if success:
