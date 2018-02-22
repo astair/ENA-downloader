@@ -79,6 +79,23 @@ def download_reads(url, output_path):
         print(io_err)
         raise  
 
+def extract_single(file_list):
+    """ Extracts single and paired files from file list and returns a tuple: 
+    ([single], [paired_1, paired_2])
+    """
+
+    single = []
+    paired = []
+    common = os.path.commonprefix(file_list)
+    print(common)
+    for file in file_list:
+        if file.split(".")[0] == common:
+            single.append(file)
+        else:
+            paired.append(file)
+    return single, paired
+
+
 
 # MAIN
 if __name__ == "__main__":
@@ -119,7 +136,6 @@ if __name__ == "__main__":
             run_id = line[4]
             layout = line[8]
             fastq_files = line[target_col].split(';')
-            fastq_names = []
 
             if verbose:
                 print("Downloading files:\n{0}".format(fastq_files))
@@ -135,6 +151,7 @@ if __name__ == "__main__":
                 logout = output_dir
                 out = output_dir
 
+            fastq_names = []
             for f in fastq_files:
                 fastq_url = "ftp://" + f
                 fastq_name = f.split('/')[-1]
@@ -145,8 +162,13 @@ if __name__ == "__main__":
             if success:
                 if verbose:
                     print("Success.")
-                with open(logout + "runs.log", 'a') as log:
-                    log.write('\t'.join([run_id, layout] + fastq_names) + '\n')
+                with open(logout + "runs.log", "a") as log:
+                    if len(fastq_names) > 2:
+                        single, paired = extract_single(fastq_names)
+                        log.write("\t".join([run_id, layout] + paired) + "\n")
+                        log.write("\t".join([run_id, "SINGLE"] + single) + "\n")
+                    else:
+                        log.write("\t".join([run_id, layout] + fastq_names) + "\n")
 
 
 
