@@ -26,7 +26,7 @@ def interface():
                         nargs='+')
     parser.add_argument("-o", "--output_path",
                         dest="OUT",
-                        help="Location of the output directory, where the downloadable files get stored. If not specified, the downloader will load all raw files in the current working directory.")  
+                        help="Location of the output directory, where the downloadable files get stored. If not specified, the downloader will load all raw files in the current working directory.")
     parser.add_argument("--verbose",
                         dest="verbose",
                         help="Switches on the verbose mode.",
@@ -43,7 +43,7 @@ def interface():
 def make_runlist_url(acc_id):
     """ Makes URL to get run list of accession ID
     """
-    
+
     root_url = "https://www.ebi.ac.uk/"
     query = "ena/data/warehouse/filereport?accession={0}&result=read_run&fields=".format(acc_id)
     fields = "study_accession,sample_accession,secondary_sample_accession,experiment_accession,run_accession,tax_id,scientific_name,instrument_model,library_layout,fastq_ftp,fastq_galaxy,submitted_ftp,submitted_galaxy,sra_ftp,sra_galaxy,cram_index_ftp,cram_index_galaxy"
@@ -54,7 +54,7 @@ def make_runlist_url(acc_id):
 def get_runlist(url):
     """ Returns the response for a given URL
     """
-    
+
     try:
         return urllib.request.urlopen(url)
     except HTTPError as http_err:
@@ -77,10 +77,10 @@ def download_reads(url, output_path):
         return False
     except IOError as io_err:
         print(io_err)
-        raise  
+        raise
 
 def extract_single(file_list):
-    """ Extracts single and paired files from file list and returns a tuple: 
+    """ Extracts single and paired files from file list and returns a tuple:
     ([single], [paired_1, paired_2])
     """
 
@@ -101,6 +101,7 @@ if __name__ == "__main__":
     args = interface()
     verbose = args.verbose
 
+    # Make output directory
     output_dir = args.OUT
     if output_dir:
         subdir = True
@@ -114,6 +115,7 @@ if __name__ == "__main__":
     read_type = args.read_type
 
     for acc_id in acc_ids:
+        # Get runlist with ftp addresses for each acc_id
         query_url = make_runlist_url(acc_id)
         run_list_response = get_runlist(query_url)
 
@@ -127,7 +129,7 @@ if __name__ == "__main__":
             print("\nThe read type {0} was not found in the run list. Maybe try a different one or check the ENA website.\n".format(read_type))
             raise
 
-        
+        # Parse lines in runlist and get ftp addresses for the wanted files
         for line in run_list_response:
             line = line.decode("utf8").strip().split('\t')
             project_id = line[0]
@@ -139,6 +141,7 @@ if __name__ == "__main__":
             if verbose:
                 print("Downloading files:\n{0}".format(fastq_files))
 
+            # Make subdirectories if outdir was specified
             if subdir:
                 logout = "{0}{1}/".format(output_dir,project_id)
                 out = "{0}{1}/{2}/".format(output_dir, project_id, sample_id)
@@ -146,10 +149,12 @@ if __name__ == "__main__":
                     os.makedirs(out)
                 except FileExistsError:
                     pass
+            # Otherwise just take the current working directory
             else:
                 logout = output_dir
                 out = output_dir
 
+            # Download the reads to output_path
             fastq_names = []
             for f in fastq_files:
                 fastq_url = "ftp://" + f
@@ -158,6 +163,7 @@ if __name__ == "__main__":
                 success = download_reads(fastq_url, output_path)
                 fastq_names.append(fastq_name)
 
+            # If download was successful, write info for downloaded files to log.
             if success:
                 if verbose:
                     print("Success.")
@@ -168,7 +174,3 @@ if __name__ == "__main__":
                         log.write("\t".join([run_id, "SINGLE"] + single) + "\n")
                     else:
                         log.write("\t".join([run_id, layout] + fastq_names) + "\n")
-
-
-
-
